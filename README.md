@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🇬🇧 CoderCo Containers Challenge
+# Containers Challenge
 
-**A multi-container Flask + Redis application, built with Docker, Compose, Nginx, and a London soul.**
+**A multi-container Flask + Redis application, built with Docker, Compose and Nginx.**
 
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
@@ -19,7 +19,7 @@
 
 A tiny web application with two pages:
 
-- **`/`** — A welcome page with a London skyline, Big Ben, and a friendly greeting.
+- **`/`** — A welcome page with a friendly greeting.
 - **`/count`** — A visit counter. Every refresh adds **1** to the count, stored in Redis.
 
 The whole thing runs in **Docker**, orchestrated by **Docker Compose**, served through **Nginx** as a load balancer, with **3 scaled Flask instances** behind it.
@@ -42,12 +42,12 @@ localhost:5000
 │   port 80       │
 └────────┬────────┘
          │  round-robin
-   ┌─────┼─────┐
-   ▼     ▼     ▼
-┌────┐ ┌────┐ ┌────┐
-│web1│ │web2│ │web3│   ← 3 scaled Flask containers
-└──┬─┘ └──┬─┘ └──┬─┘
-   └──────┼──────┘
+   ┌─────┼─────┬─────┐
+   ▼     ▼     ▼     ▼
+┌────┐ ┌────┐ ┌────┐ ┌────┐
+│web1│ │web2│ │web3│ │web4│   ← 4 scaled Flask containers
+└──┬─┘ └──┬─┘ └──┬─┘ └──┬─┘
+   └──────┼──────┼──────┘
           ▼
       ┌───────┐
       │ Redis │           ← Shared counter + persistent volume
@@ -77,12 +77,11 @@ challenge/
 
 Two routes:
 
-| Route | What It Does |
-|:------|:-------------|
-| `/` | Returns a styled London-themed welcome page |
-| `/count` | Increments a Redis counter and displays the new value |
+/ : Returns a welcome home page 
 
-The Redis connection is **read from environment variables** — no hardcoding:
+/count : Increments a Redis counter and displays the new value
+
+The Redis connection is **read from environment variables** -no hardcoding:
 
 ```python
 host_value = os.getenv("REDIS_HOST", "redis")
@@ -90,7 +89,7 @@ port_value = int(os.getenv("REDIS_PORT", "6379"))
 client = redis.Redis(host=host_value, port=port_value, decode_responses=True)
 ```
 
-### 2. `Dockerfile` — The Recipe
+### 2. `Dockerfile`
 
 ```dockerfile
 FROM python:3.11-slim
@@ -104,14 +103,14 @@ CMD ["python", "app.py"]
 
 **Why `COPY requirements.txt` comes first:** Docker caches each build step. If `requirements.txt` hasn't changed, `pip install` is skipped on rebuild — making rebuilds 10× faster.
 
-### 3. `docker-compose.yml` — The Conductor
+### 3. `docker-compose.yml`
 
 Three services:
 
 | Service | Role | Ports |
 |:--------|:-----|:------|
 | `nginx` | Load balancer | `5000:80` (only one exposed to host) |
-| `web` | Flask app (scaled ×3) | internal only |
+| `web` | Flask app (scaled ×4) | internal only |
 | `redis` | Key-value store | internal only |
 
 ### 4. `nginx.conf` — The Load Balancer
@@ -136,7 +135,7 @@ server {
 ## 🚀 How to Run It
 
 ```bash
-docker compose up -d --build --scale web=3
+docker compose up -d --build --scale web=4
 ```
 
 Open **`http://localhost:5000/`** in your browser.
@@ -169,21 +168,21 @@ docker compose ps
 
 **What you should see:** Two containers (`web`, `redis`) both `Up`.
 
-### 📸 Demo — Two Containers Running
+### 📸 Two Containers Running
 
-![Core app running with two containers](screenshots/step1-docker-ps.png)
+![Core app running with two containers](challenge/screenshots/Screenshot1.png)
 
 > *Both `challenge-web-1` and `challenge-redis-1` are up. The `web` service exposes `0.0.0.0:5000->5000/tcp`.*
 
-### 📸 Demo — Welcome Page
+### 📸 Welcome Page
 
-![Welcome page](screenshots/step1-homepage-simple.png)
+![Welcome page](challenge/screenshots/Screenshot2.png)
 
 > *`http://127.0.0.1:5000/` returns the welcome message.*
 
-### 📸 Demo — Counter Page Increments
+### 📸 Counter Page Increments
 
-![Count page after first visit](screenshots/step1-count-1.png)
+![Count page after first visit](challenge/screenshots/Screenshot3..png)
 
 > *`http://127.0.0.1:5000/count` shows "This webpage has been viewed 1 time(s)."*
 
@@ -211,15 +210,15 @@ docker volume ls
 
 You should see something like `challenge_myvol`.
 
-### 📸 Demo — Volume Registered
+### 📸 Volume Registered
 
-![Docker volume list showing myvol](screenshots/step2-volume-ls.png)
+![Docker volume list showing myvol](challenge/screenshots/Screenshot11.png)
 
 > *Docker confirms the named volume exists.*
 
-### 📸 Demo — Counter Persisted After Restart
+### Counter Persisted After Restart
 
-![Counter page after restart](screenshots/step2-count-persisted.png)
+![Counter page after restart](challenge/screenshots/Screenshot6.png)
 
 > *After `docker compose down` and `up`, the counter continues from the previous value — the volume is doing its job.*
 
@@ -247,9 +246,9 @@ Rebuild:
 docker compose up -d --build
 ```
 
-### 📸 Demo — The Proof Test Fails as Expected
+### 📸 The Proof Test Fails as Expected
 
-![Internal Server Error with wrong_host](screenshots/step3-wrong-host-browser.png)
+![Docker logs showing ConnectionError to wrong_host](challenge/screenshots/Screenshot12.png)
 
 > *The browser shows "Internal Server Error" — Flask couldn't reach the unreachable `wrong_host`.*
 
@@ -259,9 +258,9 @@ docker compose up -d --build
 docker logs challenge-web-1
 ```
 
-### 📸 Demo — Error Message Names the Wrong Host
+### 📸 Error Message Names the Wrong Host
 
-![Docker logs showing ConnectionError to wrong_host](screenshots/step3-wrong-host-logs.png)
+![Docker logs showing ConnectionError to wrong_host](challenge/screenshots/Screenshot4.png)
 
 > *The logs read `redis.exceptions.ConnectionError: Error -2 connecting to wrong_host:6379. Name or service not known.` — proof that the value came from the env var, not the fallback.*
 
@@ -280,35 +279,29 @@ docker compose up -d --build
 
 ## ✅ Step 4: Nginx Load Balancing (Bonus 3)
 
-**Goal:** Serve the app through Nginx with 3 scaled Flask instances.
+**Goal:** Serve the app through Nginx with 4 scaled Flask instances.
 
 **Commands:**
 ```bash
 docker compose down
-docker compose up -d --build --scale web=3
+docker compose up -d --build --scale web=4
 docker compose ps
 ```
 
-**What you should see:** 5 containers:
+**What you should see:** 6 containers:
 - 1 × `challenge-nginx-1` — Up, `0.0.0.0:5000->80/tcp`
-- 3 × `challenge-web-1/2/3` — Up, `5000/tcp` (internal only)
+- 4 × `challenge-web-1/2/3` — Up, `5000/tcp` (internal only)
 - 1 × `challenge-redis-1` — Up
 
-### 📸 Demo — 5 Containers Up
+### 📸 6 Containers Up
 
-![Docker PS showing nginx + 3 web + redis](screenshots/step4-docker-ps-5-containers.png)
+![Docker PS showing nginx + 4 web + redis](challenge/screenshots/Screenshot8.png)
 
 > *Notice only `nginx` is bound to the host (`0.0.0.0:5000->80/tcp`). The three `web` containers only expose `5000/tcp` internally — no host binding, no port conflict.*
 
-### 📸 Demo — Compose Output During Scaling
+### 📸 Counter Still Works Through Nginx
 
-![Compose output showing 3 web containers created](screenshots/step4-compose-scale-output.png)
-
-> *Compose creates `web-1` through `web-4` (one leftover + three new) and `nginx-1`.*
-
-### 📸 Demo — Counter Still Works Through Nginx
-
-![Count page served through Nginx](screenshots/step4-count-through-nginx.png)
+![Count page served through Nginx](challenge/screenshots/Screenshot9.png)
 
 > *Refreshing `/count` still increments. All three Flask containers share the same Redis, so the count is consistent.*
 
@@ -316,31 +309,9 @@ docker compose ps
 
 ---
 
-## 🎨 The London Custom Theme
+### 📸 Final Homepage (Custom Theme)
 
-Both pages use a London night-sky aesthetic:
-
-| Element | Description |
-|:--------|:------------|
-| **Background** | Deep twilight gradient (`#0f172a → #334155`) |
-| **Skyline** | CSS-drawn buildings silhouette at the bottom |
-| **Big Ben** | Animated glowing clock tower with pulsing amber light |
-| **Stars** | Radial-gradient dots scattered across the sky |
-| **Card** | White with a red top border (double-decker bus red) |
-| **Accent color** | `#dc2626` (London red) |
-| **Counter style** | Dark departure-board with glowing amber digits |
-
-### 📸 Demo — Final Homepage (Custom London Theme)
-
-![Final London homepage](screenshots/final-homepage.png)
-
-> *"Hello, I'm Rachida" — with a skyline, Big Ben, and badges for London, Docker, Flask, Redis, and Nginx.*
-
-### 📸 Demo — Final Count Page (Visit Pass Style)
-
-![Final counter page as London visit pass](screenshots/final-count.png)
-
-> *Ticket-style card with a "London · Visit Pass" stamp and a departure-board counter.*
+![Final London homepage](challenge/screenshots/Screenshot10.png)
 
 **No images, no external assets — everything is pure CSS.** The container stays small and pages load instantly.
 
@@ -364,24 +335,6 @@ Both pages use a London night-sky aesthetic:
 
 ---
 
-## 🐛 Common Issues & Fixes
-
-| Symptom | Cause | Fix |
-|:--------|:------|:----|
-| `ModuleNotFoundError: No module named 'flask'` | Missing `Flask` in `requirements.txt` | Add it and rebuild |
-| `redis.exceptions.ConnectionError` | Wrong `REDIS_HOST` | Set `REDIS_HOST: redis` in Compose |
-| `Bind for 0.0.0.0:5000 failed: port is already allocated` | `web` still has `ports:` | Remove `ports:` from `web` when scaling |
-| `502 Bad Gateway` from Nginx | Nginx can't reach Flask | Check `web:5000` in `nginx.conf` matches service name + port |
-| `python: can't open file '/app/app.py'` | File name mismatch | Rename your file to `app.py` and update the Dockerfile `CMD` |
-| Counter resets after restart | Volume not mounted | Add `volumes: - myvol:/data` and top-level `volumes: myvol:` |
-
-**#1 debugging command:**
-```bash
-docker compose logs
-```
-
----
-
 ## 🛠️ Command Cheat Sheet
 
 | Task | Command |
@@ -396,32 +349,6 @@ docker compose logs
 | View logs (one service) | `docker compose logs nginx` |
 | List volumes | `docker volume ls` |
 | Inspect a volume | `docker volume inspect challenge_myvol` |
-
----
-
-## 🎯 Challenge Checklist
-
-### Core Requirements
-- [x] Flask app with `/` and `/count` routes
-- [x] Redis stores the visit count
-- [x] Both services Dockerized
-- [x] Docker Compose manages both
-- [x] Custom network between services
-
-### Bonus 1 — Persistent Redis
-- [x] Named volume `myvol` mounted at `/data`
-- [x] Counter survives `docker compose down` + `up`
-
-### Bonus 2 — Environment Variables
-- [x] Redis host/port read from env vars
-- [x] `environment:` block in Compose
-- [x] Proof test: breaking `REDIS_HOST` breaks the app
-
-### Bonus 3 — Scaling + Load Balancing
-- [x] Nginx service as reverse proxy
-- [x] `--scale web=3` runs 3 Flask instances
-- [x] No host port on `web` — Nginx owns port 5000
-- [x] Round-robin across backends
 
 ---
 
