@@ -55,7 +55,6 @@ localhost:5000
 ```
 
 ---
-
 ## 📁 Project Structure
 
 ```
@@ -131,7 +130,6 @@ server {
 **Translation:** *"Listen for visitors on port 80, and pass them all to the group of Flask apps named `web`."*
 
 ---
-
 ## 🚀 How to Run It
 
 ```bash
@@ -149,9 +147,6 @@ docker compose down
 ```bash
 docker compose down -v
 ```
-
----
-
 # 🧪 Testing — Step by Step
 
 ---
@@ -170,19 +165,19 @@ docker compose ps
 
 ### 📸 Two Containers Running
 
-![Core app running with two containers](challenge/screenshots/Screenshot1.png)
+![Core app running with two containers](screenshots/Screenshot1.png)
 
 > *Both `challenge-web-1` and `challenge-redis-1` are up. The `web` service exposes `0.0.0.0:5000->5000/tcp`.*
 
 ### 📸 Welcome Page
 
-![Welcome page](challenge/screenshots/Screenshot2.png)
+![Welcome page](screenshots/Screenshot2.png)
 
 > *`http://127.0.0.1:5000/` returns the welcome message.*
 
 ### 📸 Counter Page Increments
 
-![Count page after first visit](challenge/screenshots/Screenshot3..png)
+![Count page after first visit](screenshots/Screenshot3..png)
 
 > *`http://127.0.0.1:5000/count` shows "This webpage has been viewed 1 time(s)."*
 
@@ -212,13 +207,13 @@ You should see something like `challenge_myvol`.
 
 ### 📸 Volume Registered
 
-![Docker volume list showing myvol](challenge/screenshots/Screenshot11.png)
+![Docker volume list showing myvol](screenshots/Screenshot11.png)
 
 > *Docker confirms the named volume exists.*
 
 ### Counter Persisted After Restart
 
-![Counter page after restart](challenge/screenshots/Screenshot6.png)
+![Counter page after restart](screenshots/Screenshot6.png)
 
 > *After `docker compose down` and `up`, the counter continues from the previous value — the volume is doing its job.*
 
@@ -248,7 +243,7 @@ docker compose up -d --build
 
 ### 📸 The Proof Test Fails as Expected
 
-![Docker logs showing ConnectionError to wrong_host](challenge/screenshots/Screenshot12.png)
+![Docker logs showing ConnectionError to wrong_host](screenshots/Screenshot12.png)
 
 > *The browser shows "Internal Server Error" — Flask couldn't reach the unreachable `wrong_host`.*
 
@@ -260,7 +255,7 @@ docker logs challenge-web-1
 
 ### 📸 Error Message Names the Wrong Host
 
-![Docker logs showing ConnectionError to wrong_host](challenge/screenshots/Screenshot4.png)
+![Docker logs showing ConnectionError to wrong_host](screenshots/Screenshot4.png)
 
 > *The logs read `redis.exceptions.ConnectionError: Error -2 connecting to wrong_host:6379. Name or service not known.` — proof that the value came from the env var, not the fallback.*
 
@@ -277,7 +272,7 @@ docker compose up -d --build
 
 ---
 
-## ✅ Step 4: Nginx Load Balancing (Bonus 3)
+## ✅ Step 4: Nginx Load Balancing 
 
 **Goal:** Serve the app through Nginx with 4 scaled Flask instances.
 
@@ -295,13 +290,13 @@ docker compose ps
 
 ### 📸 6 Containers Up
 
-![Docker PS showing nginx + 4 web + redis](challenge/screenshots/Screenshot8.png)
+![Docker PS showing nginx + 4 web + redis](screenshots/Screenshot8.png)
 
 > *Notice only `nginx` is bound to the host (`0.0.0.0:5000->80/tcp`). The three `web` containers only expose `5000/tcp` internally — no host binding, no port conflict.*
 
 ### 📸 Counter Still Works Through Nginx
 
-![Count page served through Nginx](challenge/screenshots/Screenshot9.png)
+![Count page served through Nginx](screenshots/Screenshot9.png)
 
 > *Refreshing `/count` still increments. All three Flask containers share the same Redis, so the count is consistent.*
 
@@ -311,12 +306,12 @@ docker compose ps
 
 ### 📸 Final Homepage (Custom Theme)
 
-![Final London homepage](challenge/screenshots/Screenshot10.png)
+![Final London homepage](screenshots/Screenshot10.png)
 
 **No images, no external assets — everything is pure CSS.** The container stays small and pages load instantly.
 
 ---
-
+<div align="center">
 ## 🧠 What I Learned
 
 | Concept | Takeaway |
@@ -334,7 +329,7 @@ docker compose ps
 | **DNS round-robin** | Docker returns all container IPs for a scaled service name |
 
 ---
-
+<div align="center">
 ## 🛠️ Command Cheat Sheet
 
 | Task | Command |
